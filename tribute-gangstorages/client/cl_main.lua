@@ -177,7 +177,7 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
     if hackable then
         LocalPlayer.state:set('inv_busy', true, true)
         TriggerEvent('animations:client:EmoteCommandStart', { "mechanic" })
-        QBCore.Functions.Progressbar('name_here', 'Breaking Into Staash', 3500, false, true, { -- Name | Label | Time | useWhileDead | canCancel
+        QBCore.Functions.Progressbar('name_here', 'Breaking Into Stash', 3500, false, true, { -- Name | Label | Time | useWhileDead | canCancel
             disableMovement = true,
             disableCarMovement = true,
             disableMouse = false,
@@ -189,9 +189,9 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
                 if success then
                     TriggerEvent('tribute-gangstorages:client:HackSuccess')
                 else
-                    QBCore.Functions.Notify('You failed', 'error')
+                    print("failed")
                 end
-            end, 8, 10)
+            end, 8, 3)
         end, function() -- Play When Cancel
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
             LocalPlayer.state:set('inv_busy', false, true)

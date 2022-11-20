@@ -35,7 +35,7 @@ RegisterNetEvent('tribute-gangstorages:server:NotifyGangMembers', function(gang)
     for i=1, #Players do
         local player = QBCore.Functions.GetPlayer(Players[i])
         print('Alerting gang of stash break in')
-        if player.PlayerData.gang.name ~= gang then
+        if player.PlayerData.gang.name == gang then
             TriggerClientEvent('tribute-gangstorages:client:ShowNotification', player.PlayerData.source)
             print('Alerted '..gang..' of stash break in')
         end
