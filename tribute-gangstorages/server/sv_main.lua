@@ -35,15 +35,18 @@ RegisterNetEvent('tribute-gangstorages:server:NotifyGangMembers', function(gang)
     for i=1, #Players do
         local player = QBCore.Functions.GetPlayer(Players[i])
         print('Alerting gang of stash break in')
-        if player.PlayerData.gang.name == gang then
-            print('GANG ALERTED OF STASH BREAK IN')
-            TriggerClientEvent('QBCore:Notify', player.PlayerData.source, 'STASH IS BEING BROKEN INTO', 'error')
-            TriggerClientEvent('QBCore:Notify', player.PlayerData.source, 'STASH IS BEING BROKEN INTO', 'error')
-            TriggerClientEvent('QBCore:Notify', player.PlayerData.source, 'STASH IS BEING BROKEN INTO', 'error')
-            print('GANG ALERTED OF STASH BREAK IN')
+        if player.PlayerData.gang.name ~= gang then
+            TriggerClientEvent('tribute-gangstorages:client:ShowNotification', player.PlayerData.source)
+            print('Alerted '..gang..' of stash break in')
         end
     end
 end)
+
+function showNotify(src)
+    print('Alerting')
+    TriggerClientEvent('tribute-gangstorages:client:ShowNotification', src)
+    print('Alerted')
+end
 
 RegisterNetEvent('tribute-gangstorages:server:HackGangStorages', function()
     local src = source
@@ -51,8 +54,8 @@ RegisterNetEvent('tribute-gangstorages:server:HackGangStorages', function()
     local gang = Player.PlayerData.gang.name
     local pos = GetEntityCoords(GetPlayerPed(src))
     local gtable = Shared.AuthorizedGangs
-    for i=1, #gtable do
-        if gang == gtable[i].name then
+    for k,v in pairs(gtable) do
+        if gang == k then
             if hackable then
                 for k,v in pairs(ginfo) do
                     local distance = #(pos - v['enterzone'])
@@ -61,21 +64,21 @@ RegisterNetEvent('tribute-gangstorages:server:HackGangStorages', function()
                         if members >= v['requiredmembers'] then
                             if gang == v['gang'] then
                                 TriggerClientEvent('QBCore:Notify', src, 'You cannot rob your own stash', 'error')
-                                --return
+                                return
                             else
                                 TriggerEvent('tribute-gangstorages:server:NotifyGangMembers', v['gang'])
                                 TriggerClientEvent('tribute-gangstorages:client:HackStash', src, true)
-                                --return
+                                return
                             end
                         else
                             TriggerClientEvent('QBCore:Notify', src, 'Not enough enemy members online', 'error')
-                            --return
+                            return
                         end
                     else
                         if v['state'] ~= true then
                             print('Not applicable')
                             TriggerClientEvent('QBCore:Notify', src, 'Stash is not robable', 'error')
-                            --return
+                            return
                         end
                     end
                 end
@@ -84,9 +87,6 @@ RegisterNetEvent('tribute-gangstorages:server:HackGangStorages', function()
                 TriggerClientEvent('QBCore:Notify', src, 'Stashes are not robable', 'error')
             end
             return
-        else
-            TriggerClientEvent('QBCore:Notify', src, 'You are not in a approved gang', 'error')
-            Shared.Hackable = false
         end
     end
 end)

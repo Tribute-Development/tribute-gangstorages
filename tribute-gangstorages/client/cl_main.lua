@@ -185,14 +185,13 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
         }, {}, {}, {}, function()
             LocalPlayer.state:set('inv_busy', false , true)
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
-            exports['hacking']:OpenHackingGame(15, 4, 1,
-            function(Success)
-                if Success then
+            exports['varhack']:OpenHackingGame(function(success)
+                if success then
                     TriggerEvent('tribute-gangstorages:client:HackSuccess')
                 else
                     QBCore.Functions.Notify('You failed', 'error')
                 end
-            end)
+            end, 8, 10)
         end, function() -- Play When Cancel
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
             LocalPlayer.state:set('inv_busy', false, true)
@@ -230,4 +229,15 @@ RegisterNetEvent('tribute-gangstorages:client:HackSuccess', function()
             return {objects}
         end
     end
+end)
+
+RegisterNetEvent('tribute-gangstorages:client:ShowNotification', function()
+    TriggerServerEvent("InteractSound_SV:PlayOnSource", "panic", 0.1)
+    SendNUIMessage({
+        type = 'show'
+     })
+     Wait(9000)
+     SendNUIMessage({
+        type = 'close'
+     })
 end)

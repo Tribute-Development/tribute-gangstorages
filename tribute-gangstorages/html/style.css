@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat');
+
+.notify {
+    position: absolute;
+    width: 265px;
+    height: 115px;
+    flex: auto;
+    flex-direction: column;
+    justify-content: right;
+    padding: 10px;
+    margin: auto;
+    right: 20px;
+    background: linear-gradient(270deg, #b70000, #0b3c7bcf);
+    background-size: 400% 400%;
+	animation: gradient 3s ease infinite;
+    border-radius: 10px;
+    font-variant: small-caps;
+    text-shadow: -1px 1px 0 #37474f, 1px 1px 0 #37474f, 1px -1px 0 #37474f, -1px -1px 0 #37474f;
+}
+
+@-webkit-keyframes slide {
+    100% { left: 0; }
+}
+
+@keyframes slide {
+    100% { left: 0; }
+}
+
+@keyframes gradient {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+.body {
+    font-family: 'ArialBold', sans-serif;
+    overflow: hidden;
+    font-variant: small-caps;
+}
+
+.header {
+    position: absolute;
+    left: 27%;
+}
+
+.gang {
+    position: absolute;
+    top: 30%
+}
+
+.text {
+    position: absolute;
+    top: 50%;
+}
