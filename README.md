@@ -8,5 +8,5 @@
 - Dependencies: qb-core, varhack for the hacking minigame
 
 **BY TRIBUTE DEVELOPMENT**
-Discord: https://discord.gg/6MFV9EsJ34
-Tebex: Scripts coming soon! New Team
+-Discord: https://discord.gg/6MFV9EsJ34
+-Tebex: Scripts coming soon! New Team
