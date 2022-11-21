@@ -6,7 +6,7 @@
 - 100% Open Source
 - Fully Custom Coded
 - Dependencies: qb-core, varhack for the hacking minigame
+- Tebex: https://store.romoy.dev/ (Scripts coming soon! New Team)
 
 **BY TRIBUTE DEVELOPMENT**
 -Discord: https://discord.gg/6MFV9EsJ34
--Tebex: Scripts coming soon! New Team
