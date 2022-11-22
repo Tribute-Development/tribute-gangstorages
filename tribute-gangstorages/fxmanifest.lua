@@ -33,4 +33,6 @@ exports {
     'SetState'
 }
 
+escrow_ignore 'shared.lua'
+
 lua54 'yes'
