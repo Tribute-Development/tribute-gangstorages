@@ -1,5 +1,8 @@
 Shared = {}
 
+Shared.RequireItem = true -- Whether for the stash hacking to require item
+Shared.ItemNeeded = 'hacking_device' -- Item needed for stash hacking if set to true
+
 Shared.Info = { -- This is how you create new gang stashes
     ['ballas'] = {
         name = 'ballasstorage', --name
@@ -41,3 +44,7 @@ Shared.AuthorizedGangs = { --Authorized Gangs for hacking stashes
         name = 'vagos'
     }
 }
+
+Shared.Time = 3 -- Time for the player to see the boxes then start the hack
+
+Shared.Boxes = 8 -- Amount of boxes in the hack

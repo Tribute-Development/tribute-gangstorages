@@ -87,7 +87,6 @@ RegisterNetEvent('tribute-gangstorages:client:CreateGangStash', function()
                 Wait(1000)
             end
             local spot = CreateObject(model, v['location'].x, v['location'].y, v['location'].z, false, false, false)
-            --TriggerEvent('tribute-gangstorages:client:CreateStash', 'storage'..gang..'1', v['stashcoords'])
             createExitZones('exit'..gang..'stash', v['exitzone'], k)
             createStash('storage'..gang..'1', v['stashcoords'], gang)
             FreezeEntityPosition(spot, true)
@@ -112,7 +111,6 @@ function createExitZones(name, coords, gang)
                     event = 'tribute-gangstorages:client:ExitGangStash',
                     icon = 'fas fa-warehouse',
                     label = 'Exit Gang Storage',
-                    --gang = gang
                 },
             },
         distance = 1.5
@@ -126,9 +124,7 @@ RegisterNetEvent('tribute-gangstorages:client:ExitGangStash', function()
     for k,v in pairs(ginfo) do
         local distance = #(pos - v['exitzone'])
         if distance <= 6 then
-            --if gang == k then
             TeleportToInterior(v['exitcoords'].x, v['exitcoords'].y, v['exitcoords'].z, 353.99679)
-            --end
         end
     end
 end)
@@ -163,7 +159,6 @@ function createStash(name, coords, gang)
                     event = 'tribute-gangstorages:client:CreateStash',
                     icon = 'fas fa-warehouse',
                     label = 'Open Gang Storage',
-                    --gang = gang
                 },
             },
         distance = 1.5
@@ -173,7 +168,6 @@ end
 RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
     local PlayerData = QBCore.Functions.GetPlayerData()
     local hackable = state
-    --local hasitem = QBCore.Functions.HasItem('laptop')
     if hackable then
         LocalPlayer.state:set('inv_busy', true, true)
         TriggerEvent('animations:client:EmoteCommandStart', { "mechanic" })
@@ -191,8 +185,8 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
                 else
                     print("failed")
                 end
-            end, 8, 3)
-        end, function() -- Play When Cancel
+            end, Shared.Boxes, Shared.Time)
+        end, function()
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
             LocalPlayer.state:set('inv_busy', false, true)
         QBCore.Functions.Notify('Cancelled', 'error')
@@ -220,7 +214,6 @@ RegisterNetEvent('tribute-gangstorages:client:HackSuccess', function()
                 Wait(1000)
             end
             local spot = CreateObject(model, v['location'].x, v['location'].y, v['location'].z, false, false, false)
-            --TriggerEvent('tribute-gangstorages:client:CreateStash', 'storage'..gang..'1', v['stashcoords'])
             createExitZones('exit'..v['gang']..'stash', v['exitzone'], k)
             createStash('storage'..v['gang']..'1', v['stashcoords'], v['gang'])
             FreezeEntityPosition(spot, true)
