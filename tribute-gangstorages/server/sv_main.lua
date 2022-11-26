@@ -6,14 +6,36 @@ local ginfo = Shared.Info
 
 local agangs = Shared.AuthorizedGangs
 
-local members = 0
+local members = {
+    ['crip'] = 0,
+    ['dow'] = 0,
+    ['ballas'] = 0,
+    ['syn'] = 0,
+    ['bnj'] = 0
+}
 
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-    TriggerEvent('tirbute-gangstorages:server:UpdateGangMembers')
+
+AddEventHandler('playerDropped', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    local gang = Player.PlayerData.gang.name
+    members[gang] = members[gang] - 1
+    print('Member leave detected, new '..gang..' gang members online : '..members[gang])
 end)
 
-AddEventHandler('onResourceStart', function()
+RegisterNetEvent('QBCore:Server:OnPlayerLoaded')
+AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    local gang = Player.PlayerData.gang.name
+    members[gang] = members[gang] + 1
+    print('New login detected: New '..gang..' Gang Members: '..members[gang])
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == GetCurrentResourceName() then
     TriggerEvent('tirbute-gangstorages:server:UpdateGangMembers')
+    end
 end)
 
 RegisterNetEvent('tirbute-gangstorages:server:UpdateGangMembers', function()
@@ -23,7 +45,9 @@ RegisterNetEvent('tirbute-gangstorages:server:UpdateGangMembers', function()
         local player = QBCore.Functions.GetPlayer(Players[i])
         for k,v in pairs(ginfo) do 
             if player.PlayerData.gang.name == k then
-                members = members + 1
+                local pgang = player.PlayerData.gang.name 
+                members[pgang] = members[pgang] + 1
+                print('Updating Gang Members: New '..pgang..' Gang Members: '..members[pgang])
             end
         end
     end
@@ -61,7 +85,7 @@ RegisterNetEvent('tribute-gangstorages:server:HackGangStorages', function()
                     local distance = #(pos - v['enterzone'])
                     if distance <= 5 then
                     if v['state'] == true then
-                        if members >= v['requiredmembers'] then
+                        if members[gang] >= v['requiredmembers'] then
                             if gang == v['gang'] then
                                 TriggerClientEvent('QBCore:Notify', src, 'You cannot rob your own stash', 'error')
                                 return
