@@ -45,6 +45,11 @@ Shared.AuthorizedGangs = { --Authorized Gangs for hacking stashes
     }
 }
 
+Shared.Gangs = {
+    ['ballas'] = 0,
+    ['vagos'] = 0
+}
+
 Shared.Time = 3 -- Time for the player to see the boxes then start the hack
 
 Shared.Boxes = 8 -- Amount of boxes in the hack

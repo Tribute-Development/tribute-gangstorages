@@ -6,13 +6,15 @@ local ginfo = Shared.Info
 
 local agangs = Shared.AuthorizedGangs
 
-local members = {
+local members = Shared.Gangs
+
+--[[ local members = {
     ['crip'] = 0,
     ['dow'] = 0,
     ['ballas'] = 0,
     ['syn'] = 0,
     ['bnj'] = 0
-}
+} ]]
 
 
 AddEventHandler('playerDropped', function()
