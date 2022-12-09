@@ -45,7 +45,7 @@ Shared.AuthorizedGangs = { --Authorized Gangs for hacking stashes
     }
 }
 
-Shared.Gangs = {
+Shared.Gangs = { -- Add gang spawn codes here as well for gang numbers update
     ['ballas'] = 0,
     ['vagos'] = 0
 }
