@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject();
 
 local ginfo = Shared.Info
 
+-- Functions
 function TeleportToInterior(x, y, z, h)
     CreateThread(function()
         SetEntityCoords(PlayerPedId(), x, y, z, 0, 0, 0, false)
@@ -13,89 +14,22 @@ function TeleportToInterior(x, y, z, h)
     end)
 end
 
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-    for k,v in pairs(ginfo) do
-        exports['qb-target']:AddBoxZone(v.name, v.enterzone, 1, 1, {
-            name=v.name,
-            heading=57.45,
-            debugPoly=false,
-            minZ = v.enterzone.z - 2.0,
-            maxZ = v.enterzone.z + 2.0,
-            }, {
-                options = {
-                    {
-                        type = 'client',
-                        event = 'tribute-gangstorages:client:CreateGangStash',
-                        icon = 'fas fa-warehouse',
-                        label = 'Enter Gang Storage',
-                        gang = v.gang
-                    },
-                    {
-                        type = 'server',
-                        event = 'tribute-gangstorages:server:HackGangStorages',
-                        icon = 'fas fa-microchip',
-                        label = 'Hack Warehouse'
-                    }
-                },
-            distance = 1.5
-        })
+function authorization(gang)
+    if Shared.Info[gang] then
+        return true
+    else
+        return false
     end
-end)
+end
 
-AddEventHandler('onResourceStart', function()
-    for k,v in pairs(ginfo) do
-        exports['qb-target']:AddBoxZone(v.name, v.enterzone, 1, 1, {
-            name=v.name,
-            heading=57.45,
-            debugPoly=false,
-            minZ = v.enterzone.z - 2.0,
-            maxZ = v.enterzone.z + 2.0,
-            }, {
-                options = {
-                    {
-                        type = 'client',
-                        event = 'tribute-gangstorages:client:CreateGangStash',
-                        icon = 'fas fa-warehouse',
-                        label = 'Enter Gang Storage',
-                        gang = v.gang
-                    },
-                    {
-                        type = 'server',
-                        event = 'tribute-gangstorages:server:HackGangStorages',
-                        icon = 'fas fa-microchip',
-                        label = 'Hack Warehouse'
-                    }
-                },
-            distance = 1.5
-        })
-    end
-end)
-
-RegisterNetEvent('tribute-gangstorages:client:CreateGangStash', function()
-    local PlayerData = QBCore.Functions.GetPlayerData()
-    local gang = PlayerData.gang.name
-    local objects = {}
-    local model = 'container2_shell'
-    for k,v in pairs(ginfo) do
-        if gang == k then
-            DoScreenFadeOut(500)
-            while not IsScreenFadedOut() do
-                Wait(10)
-            end
-            RequestModel(model)
-            while not HasModelLoaded(model) do
-                Wait(1000)
-            end
-            local spot = CreateObject(model, v['location'].x, v['location'].y, v['location'].z, false, false, false)
-            createExitZones('exit'..gang..'stash', v['exitzone'], k)
-            createStash('storage'..gang..'1', v['stashcoords'], gang)
-            FreezeEntityPosition(spot, true)
-            objects[#objects+1] = spot
-            TeleportToInterior(v['entercoords'].x, v['entercoords'].y, v['entercoords'].z, 353.99679)
-            return {objects}
+function GetClosestGangStash(pos)
+    for k,v in pairs(Shared.Info) do
+        local distance = #(pos - v.enterzone)
+        if distance <= 5 then
+            return k
         end
     end
-end)
+end
 
 function createExitZones(name, coords, gang)
     exports['qb-target']:AddBoxZone(gang, coords, 1, 1, {
@@ -117,34 +51,6 @@ function createExitZones(name, coords, gang)
     })
 end
 
-RegisterNetEvent('tribute-gangstorages:client:ExitGangStash', function()
-    local PlayerData = QBCore.Functions.GetPlayerData()
-    local gang = PlayerData.gang.name
-    local pos = GetEntityCoords(PlayerPedId())
-    for k,v in pairs(ginfo) do
-        local distance = #(pos - v['exitzone'])
-        if distance <= 6 then
-            TeleportToInterior(v['exitcoords'].x, v['exitcoords'].y, v['exitcoords'].z, 353.99679)
-        end
-    end
-end)
-
-RegisterNetEvent('tribute-gangstorages:client:CreateStash', function()
-    local PlayerData = QBCore.Functions.GetPlayerData()
-    local gang = PlayerData.gang.name
-    local pos = GetEntityCoords(PlayerPedId())
-    for k,v in pairs(ginfo) do
-        local distance = #(pos - v['stashcoords'])
-        if distance <= 12 then
-            TriggerEvent("inventory:client:SetCurrentStash", v['gang'])
-	        TriggerServerEvent("inventory:server:OpenInventory", "stash", v['gang'], {
-		        maxweight = v['weight'],
-		        slots = v['slots'],
-	        })
-        end
-    end
-end)
-
 function createStash(name, coords, gang)
     exports['qb-target']:AddBoxZone(name, coords, 1, 1, {
         name=name,
@@ -165,7 +71,207 @@ function createStash(name, coords, gang)
     })
 end
 
-RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
+function pdCheck(job)
+    local pd = Shared.PDJobs
+    for i=1, #pd do
+        if job == pd[i] then
+            return true
+        end
+    end
+    return false
+end
+
+function CreateRaidStash()
+    local model = 'container2_shell'
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+    local objects = {}
+    local stash = GetClosestGangStash(coords)
+    TriggerServerEvent('tribute-gangstorages:server:NotifyGangMembers', stash)
+    if ginfo[stash] then
+        DoScreenFadeOut(500)
+        while not IsScreenFadedOut() do
+            Wait(10)
+        end
+        RequestModel(model)
+        while not HasModelLoaded(model) do
+            Wait(1000)
+        end
+        local raidedarea = CreateObject(model, Shared.Info[stash].location.x, Shared.Info[stash].location.y, Shared.Info[stash].location.z, false, false, false)
+        createExitZones('exit'..stash..'stash', Shared.Info[stash].exitzone, stash)
+        createStash('storage'..stash..'1', Shared.Info[stash].stashcoords, stash)
+        FreezeEntityPosition(raidedarea, true)
+        objects[#objects+1] = raidedarea
+        TeleportToInterior(Shared.Info[stash].entercoords.x, Shared.Info[stash].entercoords.y, Shared.Info[stash].entercoords.z, 354.99679)
+    end
+end
+
+function RaidStash()
+    local time = math.random(1, 9)
+    local circles = math.random(1, 5)
+    local success = exports['qb-lock']:StartLockPickCircle(circles, time, success)
+    if success then
+        CreateRaidStash()
+    else
+        QBCore.Functions.Notify('You Are Trash', 'error', 7500)
+    end
+end
+
+-- Handlers
+
+AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+    local Data = QBCore.Functions.GetPlayerData()
+    local gang = Data.gang.name
+    for k,v in pairs(ginfo) do
+        exports['qb-target']:AddBoxZone(v.name, v.enterzone, 1, 1, {
+            name=v.name,
+            heading=57.45,
+            debugPoly=false,
+            minZ = v.enterzone.z - 2.0,
+            maxZ = v.enterzone.z + 2.0,
+            }, {
+                options = {
+                    {
+                        type = 'client',
+                        event = 'tribute-gangstorages:client:CreateGangStash',
+                        icon = 'fas fa-warehouse',
+                        label = 'Enter Gang Storage',
+                        gang = v.gang
+                    },
+                    {
+                        type = 'server',
+                        event = 'tribute-gangstorages:server:HackGangStorages',
+                        icon = 'fas fa-microchip',
+                        label = 'Hack Warehouse',
+                        canInteract = function()
+                            local ped = PlayerPedId()
+                            local pos = GetEntityCoords(ped)
+                            local distance = #(pos - v['enterzone'])
+                            if distance <=5 then
+                                if gang ~= v['gang'] and authorization(gang) then
+                                    return true
+                                end
+                            end
+                        end
+                    },
+                    {
+                        type = "client",
+                        event = "tribute-gangstorages:client:policeraid",
+                        icon = "fas fa-shield",
+                        label = "Raid Gang Storage",
+                        canInteract = function()
+                            if pdCheck(Data.job.name) then
+                                if exports['qb-inventory']:HasItem('signed_warrant') then return true end
+                            end
+                        end
+                    }
+                },
+            distance = 1.5
+        })
+    end
+end)
+
+AddEventHandler('onResourceStart', function()
+    local Data = QBCore.Functions.GetPlayerData()
+    local gang = Data.gang.name
+    for k,v in pairs(ginfo) do
+        exports['qb-target']:AddBoxZone(v.name, v.enterzone, 1, 1, {
+            name=v.name,
+            heading=57.45,
+            debugPoly=false,
+            minZ = v.enterzone.z - 2.0,
+            maxZ = v.enterzone.z + 2.0,
+            }, {
+                options = {
+                    {
+                        type = 'client',
+                        event = 'tribute-gangstorages:client:CreateGangStash',
+                        icon = 'fas fa-warehouse',
+                        label = 'Enter Gang Storage',
+                        gang = v.gang
+                    },
+                    {
+                        type = 'server',
+                        event = 'tribute-gangstorages:server:HackGangStorages',
+                        icon = 'fas fa-microchip',
+                        label = 'Hack Warehouse',
+                        canInteract = function()
+                            local ped = PlayerPedId()
+                            local pos = GetEntityCoords(ped)
+                            local distance = #(pos - v['enterzone'])
+                            if distance <=5 then
+                                if gang ~= v['gang'] and authorization(gang) then
+                                    return true
+                                end
+                            end
+                        end
+                    },
+                    {
+                        type = "client",
+                        event = "tribute-gangstorages:client:policeraid",
+                        icon = "fas fa-shield",
+                        label = "Raid Gang Storage",
+                        canInteract = function()
+                            if pdCheck(Data.job.name) then
+                                if exports['qb-inventory']:HasItem('signed_warrant') then return true end
+                            end
+                        end
+                    }
+                },
+            distance = 1.5
+        })
+    end
+end)
+
+-- Events 
+
+RegisterNetEvent('tribute-gangstorages:client:CreateGangStash', function()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+    local gang = PlayerData.gang.name
+    local objects = {}
+    local model = 'container2_shell'
+    if ginfo[gang] then
+        DoScreenFadeOut(500)
+        while not IsScreenFadedOut() do
+            Wait(10)
+        end
+        RequestModel(model)
+        while not HasModelLoaded(model) do
+            Wait(1000)
+        end
+        local spot = CreateObject(model, ginfo[gang].location.x, ginfo[gang].location.y, ginfo[gang].location.z, false, false, false)
+        createExitZones('exit'..gang..'stash', ginfo[gang].exitzone, gang)
+        createStash('storage'..gang..'1', ginfo[gang].stashcoords, gang)
+        FreezeEntityPosition(spot, true)
+        objects[#objects+1] = spot
+        TeleportToInterior(ginfo[gang].entercoords.x, ginfo[gang].entercoords.y, ginfo[gang].entercoords.z, 353.99679)
+        return {objects}
+    end
+end)
+
+RegisterNetEvent('tribute-gangstorages:client:ExitGangStash', function()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+    local gang = PlayerData.gang.name
+    local pos = GetEntityCoords(PlayerPedId())
+    if ginfo[gang] then
+        TeleportToInterior(ginfo[gang].exitcoords.x, ginfo[gang].exitcoords.y, ginfo[gang].exitcoords.z, 353.99679)
+    end
+end)
+
+RegisterNetEvent('tribute-gangstorages:client:CreateStash', function()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+    local gang = PlayerData.gang.name
+    local pos = GetEntityCoords(PlayerPedId())
+    if ginfo[gang] then
+        TriggerEvent("inventory:client:SetCurrentStash", gang)
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", gang, {
+            maxweight = ginfo[gang].weight,
+            slots = ginfo[gang].slots,
+        })
+    end
+end)
+
+RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state, stash)
     local PlayerData = QBCore.Functions.GetPlayerData()
     local hackable = state
     if hackable then
@@ -181,7 +287,7 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
             exports['varhack']:OpenHackingGame(function(success)
                 if success then
-                    TriggerEvent('tribute-gangstorages:client:HackSuccess')
+                    TriggerEvent('tribute-gangstorages:client:HackSuccess', stash)
                 else
                     print("failed")
                 end
@@ -189,38 +295,51 @@ RegisterNetEvent('tribute-gangstorages:client:HackStash', function(state)
         end, function()
             TriggerEvent('animations:client:EmoteCommandStart', { "c" })
             LocalPlayer.state:set('inv_busy', false, true)
-        QBCore.Functions.Notify('Cancelled', 'error')
+            QBCore.Functions.Notify('Cancelled', 'error')
         end)
     else
         QBCore.Functions.Notify('You are missing something', 'error')
     end
 end)
 
-RegisterNetEvent('tribute-gangstorages:client:HackSuccess', function()
+RegisterNetEvent('tribute-gangstorages:client:policeraid', function()
+    local Data = QBCore.Functions.GetPlayerData()
+    local job = Data.job.name
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+    if pdCheck(job) then
+        local stash = GetClosestGangStash(coords)
+        if ginfo[stash] then
+            RaidStash()
+        else
+            QBCore.Functions.Notify('No Stash Found', 'error')
+        end
+    else
+        QBCore.Functions.Notify('You are a not a cop', 'error', 7500)
+    end
+end)
+
+RegisterNetEvent('tribute-gangstorages:client:HackSuccess', function(stash)
     local PlayerData = QBCore.Functions.GetPlayerData()
     local gang = PlayerData.gang.name
     local pos = GetEntityCoords(PlayerPedId())
     local objects = {}
     local model = 'container2_shell'
-    for k,v in pairs(ginfo) do
-        local distance = #(pos - v['enterzone'])
-        if distance <= 5 then
-            DoScreenFadeOut(500)
-            while not IsScreenFadedOut() do
-                Wait(10)
-            end
-            RequestModel(model)
-            while not HasModelLoaded(model) do
-                Wait(1000)
-            end
-            local spot = CreateObject(model, v['location'].x, v['location'].y, v['location'].z, false, false, false)
-            createExitZones('exit'..v['gang']..'stash', v['exitzone'], k)
-            createStash('storage'..v['gang']..'1', v['stashcoords'], v['gang'])
-            FreezeEntityPosition(spot, true)
-            objects[#objects+1] = spot
-            TeleportToInterior(v['entercoords'].x, v['entercoords'].y, v['entercoords'].z, 353.99679)
-            return {objects}
+    if Shared.Info[stash] then
+        DoScreenFadeOut(500)
+        while not IsScreenFadedOut() do
+            Wait(10)
         end
+        RequestModel(model)
+        while not HasModelLoaded(model) do
+            Wait(1000)
+        end
+        local spot = CreateObject(model, Shared.Info[stash].location.x, Shared.Info[stash].location.y, Shared.Info[stash].location.z, false, false, false)
+        createExitZones('exit'..stash..'stash', Shared.Info[stash].exitzone, stash)
+        createStash('storage'..stash..'1', Shared.Info[stash].stashcoords, stash)
+        FreezeEntityPosition(spot, true)
+        objects[#objects+1] = spot
+        TeleportToInterior(Shared.Info[stash].entercoords.x, Shared.Info[stash].entercoords.y, Shared.Info[stash].entercoords.z, 354.99679)
     end
 end)
 
